@@ -14,33 +14,33 @@ will also discover incorrect usage of imported modules.
 
 from __future__ import annotations
 
+import sys
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    assert sys.platform != "win32", "pytype isn't yet installed in CI, but wheels can be built on Windows"
+if sys.version_info >= (3, 13):
+    print("pytype does not support Python 3.13+ yet.", file=sys.stderr)
+    sys.exit(1)
+
+
 import argparse
 import importlib.metadata
 import inspect
 import os
-import sys
 import traceback
 from collections.abc import Iterable, Sequence
-
-from packaging.requirements import Requirement
-
-from _metadata import read_dependencies
-from _utils import SupportedVersionsDict, parse_stdlib_versions_file, supported_versions_for_module
-
-if sys.platform == "win32":
-    print("pytype does not support Windows.", file=sys.stderr)
-    sys.exit(1)
-if sys.version_info >= (3, 13):
-    print("pytype does not support Python 3.13+ yet.", file=sys.stderr)
-    sys.exit(1)
 
 # pytype is not py.typed https://github.com/google/pytype/issues/1325
 from pytype import config as pytype_config, load_pytd  # type: ignore[import]
 from pytype.imports import typeshed  # type: ignore[import]
 
+from ts_utils.metadata import read_dependencies
+from ts_utils.utils import SupportedVersionsDict, parse_stdlib_versions_file, supported_versions_for_module
+
 TYPESHED_SUBDIRS = ["stdlib", "stubs"]
 TYPESHED_HOME = "TYPESHED_HOME"
-_LOADERS = {}
+_LOADERS: dict[str, tuple[pytype_config.Options, load_pytd.Loader]] = {}
 
 
 def main() -> None:
@@ -74,7 +74,7 @@ def create_parser() -> argparse.ArgumentParser:
 
 
 def run_pytype(*, filename: str, python_version: str, missing_modules: Iterable[str]) -> str | None:
-    """Runs pytype, returning the stderr if any."""
+    """Run pytype, returning the stderr if any."""
     if python_version not in _LOADERS:
         options = pytype_config.Options.create("", parse_pyi=True, python_version=python_version)
         # For simplicity, pretends missing modules are part of the stdlib.
@@ -107,7 +107,7 @@ def _get_relative(filename: str) -> str:
 
 
 def _get_module_name(filename: str) -> str:
-    """Converts a filename {subdir}/m.n/module/foo to module.foo."""
+    """Convert a filename {subdir}/m.n/module/foo to module.foo."""
     parts = _get_relative(filename).split(os.path.sep)
     if parts[0] == "stdlib":
         module_parts = parts[1:]
@@ -163,7 +163,12 @@ def _is_supported_stdlib_version(module_versions: SupportedVersionsDict, filenam
 
 
 def _get_pkgs_associated_with_requirement(req_name: str) -> list[str]:
-    dist = importlib.metadata.distribution(req_name)
+    try:
+        dist = importlib.metadata.distribution(req_name)
+    except importlib.metadata.PackageNotFoundError:
+        # The package wasn't installed, probably because an environment
+        # marker excluded it.
+        return []
     toplevel_txt_contents = dist.read_text("top_level.txt")
     if toplevel_txt_contents is None:
         if dist.files is None:
@@ -198,8 +203,7 @@ def get_missing_modules(files_to_test: Sequence[str]) -> Iterable[str]:
     missing_modules = set()
     for distribution in stub_distributions:
         for external_req in read_dependencies(distribution).external_pkgs:
-            req_name = Requirement(external_req).name
-            associated_packages = _get_pkgs_associated_with_requirement(req_name)
+            associated_packages = _get_pkgs_associated_with_requirement(external_req.name)
             missing_modules.update(associated_packages)
 
     test_dir = os.path.dirname(__file__)

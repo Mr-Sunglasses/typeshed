@@ -1,5 +1,5 @@
 from _typeshed import BytesPath, StrPath, Unused
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, MutableSequence, Sequence
 from typing import ClassVar, Literal, TypeVar, overload
 from typing_extensions import TypeAlias, TypeVarTuple, Unpack
 
@@ -9,12 +9,12 @@ _BytesPathT = TypeVar("_BytesPathT", bound=BytesPath)
 _Ts = TypeVarTuple("_Ts")
 
 def gen_lib_options(
-    compiler: CCompiler, library_dirs: list[str], runtime_library_dirs: list[str], libraries: list[str]
+    compiler: CCompiler, library_dirs: Iterable[str], runtime_library_dirs: Iterable[str], libraries: Iterable[str]
 ) -> list[str]: ...
-def gen_preprocess_options(macros: list[_Macro], include_dirs: list[str]) -> list[str]: ...
-def get_default_compiler(osname: str | None = ..., platform: str | None = ...) -> str: ...
+def gen_preprocess_options(macros: Iterable[_Macro], include_dirs: Iterable[str]) -> list[str]: ...
+def get_default_compiler(osname: str | None = None, platform: str | None = None) -> str: ...
 def new_compiler(
-    plat: str | None = ..., compiler: str | None = ..., verbose: bool = False, dry_run: bool = False, force: bool = False
+    plat: str | None = None, compiler: str | None = None, verbose: bool = False, dry_run: bool = False, force: bool = False
 ) -> CCompiler: ...
 def show_compilers() -> None: ...
 
@@ -47,134 +47,134 @@ class CCompiler:
     def set_library_dirs(self, dirs: list[str]) -> None: ...
     def add_runtime_library_dir(self, dir: str) -> None: ...
     def set_runtime_library_dirs(self, dirs: list[str]) -> None: ...
-    def define_macro(self, name: str, value: str | None = ...) -> None: ...
+    def define_macro(self, name: str, value: str | None = None) -> None: ...
     def undefine_macro(self, name: str) -> None: ...
     def add_link_object(self, object: str) -> None: ...
     def set_link_objects(self, objects: list[str]) -> None: ...
     def detect_language(self, sources: str | list[str]) -> str | None: ...
-    def find_library_file(self, dirs: list[str], lib: str, debug: bool = False) -> str | None: ...
+    def find_library_file(self, dirs: Iterable[str], lib: str, debug: bool = False) -> str | None: ...
     def has_function(
         self,
         funcname: str,
-        includes: list[str] | None = ...,
-        include_dirs: list[str] | None = ...,
-        libraries: list[str] | None = ...,
-        library_dirs: list[str] | None = ...,
+        includes: Iterable[str] | None = None,
+        include_dirs: list[str] | tuple[str, ...] | None = None,
+        libraries: list[str] | None = None,
+        library_dirs: list[str] | tuple[str, ...] | None = None,
     ) -> bool: ...
     def library_dir_option(self, dir: str) -> str: ...
     def library_option(self, lib: str) -> str: ...
     def runtime_library_dir_option(self, dir: str) -> str: ...
-    def set_executables(self, **args: str) -> None: ...
+    def set_executables(self, **kwargs: str) -> None: ...
     def compile(
         self,
-        sources: list[str],
-        output_dir: str | None = ...,
-        macros: list[_Macro] | None = ...,
-        include_dirs: list[str] | None = ...,
+        sources: Sequence[StrPath],
+        output_dir: str | None = None,
+        macros: list[_Macro] | None = None,
+        include_dirs: list[str] | tuple[str, ...] | None = None,
         debug: bool = False,
-        extra_preargs: list[str] | None = ...,
-        extra_postargs: list[str] | None = ...,
-        depends: list[str] | None = ...,
+        extra_preargs: list[str] | None = None,
+        extra_postargs: list[str] | None = None,
+        depends: list[str] | tuple[str, ...] | None = None,
     ) -> list[str]: ...
     def create_static_lib(
         self,
-        objects: list[str],
+        objects: list[str] | tuple[str, ...],
         output_libname: str,
-        output_dir: str | None = ...,
+        output_dir: str | None = None,
         debug: bool = False,
-        target_lang: str | None = ...,
+        target_lang: str | None = None,
     ) -> None: ...
     def link(
         self,
         target_desc: str,
-        objects: list[str],
+        objects: list[str] | tuple[str, ...],
         output_filename: str,
-        output_dir: str | None = ...,
-        libraries: list[str] | None = ...,
-        library_dirs: list[str] | None = ...,
-        runtime_library_dirs: list[str] | None = ...,
-        export_symbols: list[str] | None = ...,
+        output_dir: str | None = None,
+        libraries: list[str] | tuple[str, ...] | None = None,
+        library_dirs: list[str] | tuple[str, ...] | None = None,
+        runtime_library_dirs: list[str] | tuple[str, ...] | None = None,
+        export_symbols: Iterable[str] | None = None,
         debug: bool = False,
-        extra_preargs: list[str] | None = ...,
-        extra_postargs: list[str] | None = ...,
-        build_temp: str | None = ...,
-        target_lang: str | None = ...,
+        extra_preargs: list[str] | None = None,
+        extra_postargs: list[str] | None = None,
+        build_temp: StrPath | None = None,
+        target_lang: str | None = None,
     ) -> None: ...
     def link_executable(
         self,
-        objects: list[str],
+        objects: list[str] | tuple[str, ...],
         output_progname: str,
-        output_dir: str | None = ...,
-        libraries: list[str] | None = ...,
-        library_dirs: list[str] | None = ...,
-        runtime_library_dirs: list[str] | None = ...,
+        output_dir: str | None = None,
+        libraries: list[str] | tuple[str, ...] | None = None,
+        library_dirs: list[str] | tuple[str, ...] | None = None,
+        runtime_library_dirs: list[str] | tuple[str, ...] | None = None,
         debug: bool = False,
-        extra_preargs: list[str] | None = ...,
-        extra_postargs: list[str] | None = ...,
-        target_lang: str | None = ...,
+        extra_preargs: list[str] | None = None,
+        extra_postargs: list[str] | None = None,
+        target_lang: str | None = None,
     ) -> None: ...
     def link_shared_lib(
         self,
-        objects: list[str],
+        objects: list[str] | tuple[str, ...],
         output_libname: str,
-        output_dir: str | None = ...,
-        libraries: list[str] | None = ...,
-        library_dirs: list[str] | None = ...,
-        runtime_library_dirs: list[str] | None = ...,
-        export_symbols: list[str] | None = ...,
+        output_dir: str | None = None,
+        libraries: list[str] | tuple[str, ...] | None = None,
+        library_dirs: list[str] | tuple[str, ...] | None = None,
+        runtime_library_dirs: list[str] | tuple[str, ...] | None = None,
+        export_symbols: Iterable[str] | None = None,
         debug: bool = False,
-        extra_preargs: list[str] | None = ...,
-        extra_postargs: list[str] | None = ...,
-        build_temp: str | None = ...,
-        target_lang: str | None = ...,
+        extra_preargs: list[str] | None = None,
+        extra_postargs: list[str] | None = None,
+        build_temp: StrPath | None = None,
+        target_lang: str | None = None,
     ) -> None: ...
     def link_shared_object(
         self,
-        objects: list[str],
+        objects: list[str] | tuple[str, ...],
         output_filename: str,
-        output_dir: str | None = ...,
-        libraries: list[str] | None = ...,
-        library_dirs: list[str] | None = ...,
-        runtime_library_dirs: list[str] | None = ...,
-        export_symbols: list[str] | None = ...,
+        output_dir: str | None = None,
+        libraries: list[str] | tuple[str, ...] | None = None,
+        library_dirs: list[str] | tuple[str, ...] | None = None,
+        runtime_library_dirs: list[str] | tuple[str, ...] | None = None,
+        export_symbols: Iterable[str] | None = None,
         debug: bool = False,
-        extra_preargs: list[str] | None = ...,
-        extra_postargs: list[str] | None = ...,
-        build_temp: str | None = ...,
-        target_lang: str | None = ...,
+        extra_preargs: list[str] | None = None,
+        extra_postargs: list[str] | None = None,
+        build_temp: StrPath | None = None,
+        target_lang: str | None = None,
     ) -> None: ...
     def preprocess(
         self,
-        source: str,
-        output_file: str | None = ...,
-        macros: list[_Macro] | None = ...,
-        include_dirs: list[str] | None = ...,
-        extra_preargs: list[str] | None = ...,
-        extra_postargs: list[str] | None = ...,
+        source: StrPath,
+        output_file: StrPath | None = None,
+        macros: list[_Macro] | None = None,
+        include_dirs: list[str] | tuple[str, ...] | None = None,
+        extra_preargs: list[str] | None = None,
+        extra_postargs: Iterable[str] | None = None,
     ) -> None: ...
     @overload
-    def executable_filename(self, basename: str, strip_dir: Literal[0, False] = 0, output_dir: StrPath = ...) -> str: ...
+    def executable_filename(self, basename: str, strip_dir: Literal[False] = False, output_dir: StrPath = "") -> str: ...
     @overload
-    def executable_filename(self, basename: StrPath, strip_dir: Literal[1, True], output_dir: StrPath = ...) -> str: ...
+    def executable_filename(self, basename: StrPath, strip_dir: Literal[True], output_dir: StrPath = "") -> str: ...
     def library_filename(
         self, libname: str, lib_type: str = "static", strip_dir: bool = False, output_dir: StrPath = ""
     ) -> str: ...
     def object_filenames(
-        self, source_filenames: Iterable[StrPath], strip_dir: bool = False, output_dir: StrPath | None = ...
+        self, source_filenames: Iterable[StrPath], strip_dir: bool = False, output_dir: StrPath | None = ""
     ) -> list[str]: ...
     @overload
-    def shared_object_filename(self, basename: str, strip_dir: Literal[0, False] = 0, output_dir: StrPath = ...) -> str: ...
+    def shared_object_filename(self, basename: str, strip_dir: Literal[False] = False, output_dir: StrPath = "") -> str: ...
     @overload
-    def shared_object_filename(self, basename: StrPath, strip_dir: Literal[1, True], output_dir: StrPath = ...) -> str: ...
+    def shared_object_filename(self, basename: StrPath, strip_dir: Literal[True], output_dir: StrPath = "") -> str: ...
     def execute(
-        self, func: Callable[[Unpack[_Ts]], Unused], args: tuple[Unpack[_Ts]], msg: str | None = ..., level: int = ...
+        self, func: Callable[[Unpack[_Ts]], Unused], args: tuple[Unpack[_Ts]], msg: str | None = None, level: int = 1
     ) -> None: ...
-    def spawn(self, cmd: list[str]) -> None: ...
-    def mkpath(self, name: str, mode: int = ...) -> None: ...
+    def spawn(self, cmd: MutableSequence[bytes | StrPath]) -> None: ...
+    def mkpath(self, name: str, mode: int = 0o777) -> None: ...
     @overload
     def move_file(self, src: StrPath, dst: _StrPathT) -> _StrPathT | str: ...
     @overload
     def move_file(self, src: BytesPath, dst: _BytesPathT) -> _BytesPathT | bytes: ...
-    def announce(self, msg: str, level: int = ...) -> None: ...
+    def announce(self, msg: str, level: int = 1) -> None: ...
     def warn(self, msg: str) -> None: ...
     def debug_print(self, msg: str) -> None: ...
